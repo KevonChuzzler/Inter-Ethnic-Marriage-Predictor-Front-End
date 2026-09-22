@@ -36,6 +36,17 @@ const Footer = () => (
   </footer>
 );
 
+function getApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (envUrl) {
+    const match = envUrl.match(/https?:\/\/[^\s)\]"',]+/i);
+    if (match) {
+      return match[0].replace(/\/$/, '');
+    }
+  }
+  return 'https://census-marriage-predictor.onrender.com';
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({ sex: '', age: 25, language: '', province: '' });
@@ -53,36 +64,45 @@ export default function App() {
   const handlePredict = async (data: FormData) => {
     setLoading(true);
     setError(null);
-    const rawUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-    // Clean the URL: handle accidental parenthesis or extra text, and remove trailing slash
-    const cleanUrl = rawUrl.split('(')[0].replace(/\/$/, '');
-    const url = `${cleanUrl}/predict`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}/predict`;
     console.log('Attempting prediction at:', url);
     console.log('Sending data:', data);
+
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+
       console.log('Response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Prediction error response:', errorText);
-        throw new Error(`Prediction failed: ${response.status} - ${errorText}`);
+        throw new Error(`Server returned ${response.status}: ${errorText || response.statusText}`);
       }
+
       const result = await response.json();
       console.log('Prediction result:', result);
-      // Map the object to an array of { ethnicity: string, probability: number }
-      const formattedResult = Object.entries(result.predictions).map(([ethnicity, probability]) => ({
-        ethnicity,
-        probability: typeof probability === 'number' ? parseFloat(probability.toFixed(2)) : 0
-      })).sort((a, b) => b.probability - a.probability);
-      setPrediction(formattedResult);
-      setStep(5);
-    } catch (e) {
+
+      if (result && result.predictions && typeof result.predictions === 'object') {
+        const formattedResult = Object.entries(result.predictions).map(([ethnicity, probability]) => ({
+          ethnicity,
+          probability: typeof probability === 'number' ? parseFloat(probability.toFixed(2)) : 0
+        })).sort((a, b) => b.probability - a.probability);
+
+        setPrediction(formattedResult);
+        setStep(5);
+      } else if (Array.isArray(result)) {
+        setPrediction(result);
+        setStep(5);
+      } else {
+        throw new Error('Unexpected response format received from backend.');
+      }
+    } catch (e: any) {
       console.error('Caught error during fetch:', e);
-      setError('Failed to fetch prediction. Ensure backend is running.');
+      setError(`Prediction request failed: ${e?.message || 'Network error'}. If the server is on a free tier, it may take 30-50s to wake up on first call.`);
     } finally {
       setLoading(false);
     }
