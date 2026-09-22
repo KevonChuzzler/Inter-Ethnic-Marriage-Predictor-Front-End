@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Dices, User, Users, MapPin, Languages, Loader2 } from 'lucide-react';
 
 const LANGUAGES = ['isiZulu', 'isiXhosa', 'Afrikaans', 'English', 'Sepedi', 'Setswana', 'Sesotho', 'Xitsonga', 'Siswati', 'Tshivenda', 'Isindebele'];
