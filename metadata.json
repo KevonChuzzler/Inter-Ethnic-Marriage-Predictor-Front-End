@@ -1,0 +1,6 @@
+{
+  "name": "SA Inter-Ethnic Marriage Predictor",
+  "description": "Gamified predictor for South African inter-ethnic marriage compatibility.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
