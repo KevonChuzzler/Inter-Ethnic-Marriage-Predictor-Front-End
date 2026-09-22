@@ -179,7 +179,7 @@ export default function App() {
           </div>
         )}
 
-        {step === 5 && prediction && (
+        {step === 5 && prediction && Array.isArray(prediction) && (
           <div className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-sm border border-neutral-200">
             <h2 className="text-2xl font-bold mb-6">Your Results</h2>
             <ul className="space-y-3">
