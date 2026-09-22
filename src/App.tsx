@@ -53,7 +53,10 @@ export default function App() {
   const handlePredict = async (data: FormData) => {
     setLoading(true);
     setError(null);
-    const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/predict`;
+    const rawUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    // Clean the URL: handle accidental parenthesis or extra text, and remove trailing slash
+    const cleanUrl = rawUrl.split('(')[0].replace(/\/$/, '');
+    const url = `${cleanUrl}/predict`;
     console.log('Attempting prediction at:', url);
     console.log('Sending data:', data);
     try {
