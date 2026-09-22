@@ -53,17 +53,32 @@ export default function App() {
   const handlePredict = async (data: FormData) => {
     setLoading(true);
     setError(null);
+    const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/predict`;
+    console.log('Attempting prediction at:', url);
+    console.log('Sending data:', data);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/predict`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Prediction failed');
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Prediction error response:', errorText);
+        throw new Error(`Prediction failed: ${response.status} - ${errorText}`);
+      }
       const result = await response.json();
-      setPrediction(result);
+      console.log('Prediction result:', result);
+      // Map the object to an array of { ethnicity: string, probability: number }
+      const formattedResult = Object.entries(result.predictions).map(([ethnicity, probability]) => ({
+        ethnicity,
+        probability: typeof probability === 'number' ? parseFloat(probability.toFixed(2)) : 0
+      })).sort((a, b) => b.probability - a.probability);
+      setPrediction(formattedResult);
       setStep(5);
     } catch (e) {
+      console.error('Caught error during fetch:', e);
       setError('Failed to fetch prediction. Ensure backend is running.');
     } finally {
       setLoading(false);
